@@ -92,5 +92,4 @@ nodes:
       - tick
     env:
       DEFAULT_QUESTION: Respond with right, left, forward, backward, stop to move the car close to the person without touching
-      CUSTOM_MODEL_PATH: /home/gosim/.cache/modelscope/hub/Qwen/Qwen2-VL-2B-Instruct
-      ADAPTER_PATH: /home/gosim/Dev/LLaMA-Factory/saves/qwen2_vl-2b/lora_double_camera/sft
+      ADAPTER_PATH: /home/peter/Documents/work/mick/sft

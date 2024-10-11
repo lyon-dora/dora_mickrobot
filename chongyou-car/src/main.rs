@@ -1,3 +1,6 @@
+//! 这个是小车的驱动控制器
+//! Author: 李扬(技安)
+
 use std::{io::Write, time::Duration};
 
 use dora_node_api::{DoraNode, Event};
@@ -16,7 +19,11 @@ async fn main() -> eyre::Result<()> {
     dotenv::dotenv().ok();
 
     // serial port
-    let serial_port = "/dev/ttyUSB0";
+    let serial_port = std::env::var(config::SERIAL_PORT).unwrap_or("/dev/ttyUSB0".to_string());
+    let speed = std::env::var("SPEED")
+        .unwrap_or("0.2".to_string())
+        .parse::<f64>()
+        .unwrap_or(0.2_f64);
 
     // 连接串口
     const COM_SETTINGS: serial::PortSettings = serial::PortSettings {
@@ -58,16 +65,16 @@ async fn main() -> eyre::Result<()> {
             let received_string: &str = TryFrom::try_from(&data).unwrap();
             match received_string {
                 "forward" => {
-                    tx_key.send((0.2 * r, 0.0)).await.ok();
+                    tx_key.send((speed * r, 0.0)).await.ok();
                 }
                 "left" => {
-                    tx_key.send((0.0, 0.2 * r)).await.ok();
+                    tx_key.send((0.0, speed * r)).await.ok();
                 }
                 "right" => {
-                    tx_key.send((0.0, -0.2 * r)).await.ok();
+                    tx_key.send((0.0, -speed * r)).await.ok();
                 }
                 "backward" => {
-                    tx_key.send((-0.2 * r, 0.0)).await.ok();
+                    tx_key.send((-speed * r, 0.0)).await.ok();
                 }
                 "stop" => {
                     tx_key.send((0.0, 0.0)).await.ok();

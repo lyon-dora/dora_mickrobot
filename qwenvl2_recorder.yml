@@ -1,21 +1,22 @@
 nodes:
   - id: mickrobot_chassis
     # path: build/mickrobotx4
-    path: /home/gosim/Dev/dora_mickrobot/chongyou-car/target/debug/robot
+    path: /home/HwHiAiUser/Dev/dora_mickrobot/chongyou-car/target/debug/robot
     inputs:
       text: dora-qwenvl-recorder/text
     # inputs:
     #   text: text-interpolation/CmdVelTwist
-        # source: text-interpolation/CmdVelTwist
+    # source: text-interpolation/CmdVelTwist
     # outputs:
     #   - Odometry
-
 
   - id: keyboard-listener
     build: pip install dora-keyboard
     path: dora-keyboard
     outputs:
       - char
+    env:
+      DISPLAY: :0
 
   - id: key-interpolation
     path: key_interpolation.py
@@ -24,12 +25,12 @@ nodes:
     outputs:
       - text
 
-  - id: text-interpolation
-    path: text_interpolation.py
-    inputs:
-      text: key-interpolation/text
-    outputs:
-      - CmdVelTwist
+  #- id: text-interpolation
+  #  path: text_interpolation.py
+  #  inputs:
+  #    text: key-interpolation/text
+  #  outputs:
+  #    - CmdVelTwist
 
   - id: camera1
     build: pip install opencv-video-capture
@@ -42,6 +43,8 @@ nodes:
       CAPTURE_PATH: 0
       IMAGE_WIDTH: 640
       IMAGE_HEIGHT: 480
+      VERTICAL_FLIP: True
+      ENCODING: jpeg
 
   - id: camera2
     build: pip install opencv-video-capture
@@ -51,35 +54,52 @@ nodes:
     outputs:
       - image
     env:
-      CAPTURE_PATH: 2
+      CAPTURE_PATH: 3
       IMAGE_WIDTH: 640
       IMAGE_HEIGHT: 480
+      VERTICAL_FLIP: True
+      ENCODING: jpeg
 
   # - id: plot
   #   operator:
   #     python: plot_image_only.py
   #     inputs:
   #       image: camera/image
-
-  - id: plot
-    build: cargo install dora-rerun --locked    #&& cargo install --force rerun-cli@0.15.1
-    path: dora-rerun
+  - id: plot_1
+    build: cargo install dora-rerun --locked #&& cargo install --force rerun-cli@0.15.1
+    path: opencv-plot
+    _unstable_deploy:
+      machine: tower
     inputs:
-      image_1:
+      image:
         source: camera1/image
         queue_size: 1
-      image_2:
+      text: dora-qwenvl-recorder/text
+    env:
+      IMAGE_WIDTH: 640
+      IMAGE_HEIGHT: 480
+      RERUN_MEMORY_LIMIT: 25%
+
+  - id: plot_2
+    build: cargo install dora-rerun --locked #&& cargo install --force rerun-cli@0.15.1
+    path: opencv-plot
+    _unstable_deploy:
+      machine: tower
+    inputs:
+      image:
         source: camera2/image
         queue_size: 1
-      textlog_vlm: dora-qwenvl-recorder/text
+      text: dora-qwenvl-recorder/text
     env:
       IMAGE_WIDTH: 640
       IMAGE_HEIGHT: 480
       RERUN_MEMORY_LIMIT: 25%
 
   - id: dora-qwenvl-recorder
-    build: pip install /home/gosim/Dev/dora/node-hub/llama-factory-recorder
+    build: pip install /home/HwHiAiUser/Dev/dora/node-hub/llama-factory-recorder
     path: llama-factory-recorder
+    _unstable_deploy:
+      machine: tower
     inputs:
       image_1:
         source: camera1/image
@@ -91,5 +111,7 @@ nodes:
     outputs:
       - text
     env:
-      DEFAULT_QUESTION: Respond with right, left, forward, backward,stop to move to the red line
+      DEFAULT_QUESTION: Respond with right, left, forward, backward, stop to move the car close to the person without touching
       LLAMA_FACTORY_ROOT_PATH: /home/gosim/Dev/LLaMA-Factory
+      IMAGE_WIDTH: 640
+      IMAGE_HEIGHT: 480
